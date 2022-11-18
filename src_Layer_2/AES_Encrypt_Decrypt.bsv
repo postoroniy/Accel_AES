@@ -53,11 +53,12 @@ module mkAES_Encrypt_Decrypt (AES_Encrypt_Decrypt_IFC);
     // BEHAVIOR
 
     Reg #(Bit #(4)) rg_j <- mkRegU;
+    Reg #(Bit #(4)) rg_j_max <- mkRegU;
 
     FSM fsm_aesEncrypt <- mkFSM (
     seq
         rg_state <= addRoundKey (ekInit, rg_state);
-        for (rg_j <= 1; rg_j < fromInteger (nr); rg_j <= rg_j + 1)
+        for (rg_j <= 1; rg_j < rg_j_max; rg_j <= rg_j + 1)
             rg_state <= aesRound (eks [rg_j - 1], rg_state);
         rg_state <= aesFinalRound (ekFinal, rg_state);
     endseq
@@ -66,7 +67,7 @@ module mkAES_Encrypt_Decrypt (AES_Encrypt_Decrypt_IFC);
     FSM fsm_aesDecrypt <- mkFSM (
     seq
         rg_state <= addRoundKey (dkInit, rg_state);
-        for (rg_j <= 1; rg_j < fromInteger (nr); rg_j <= rg_j + 1)
+        for (rg_j <= 1; rg_j < rg_j_max; rg_j <= rg_j + 1)
             rg_state <= aesInvRound (reverse (dks) [rg_j - 1], rg_state);
         rg_state <= aesFinalInvRound (dkFinal, rg_state);
     endseq
@@ -80,6 +81,12 @@ module mkAES_Encrypt_Decrypt (AES_Encrypt_Decrypt_IFC);
     // the full key schedule.
     method Action set_key (Bit #(AESKeySize) key, Bit #(2) keytype);
         keyExpand.set_key (key,keytype);
+        if(keytype==0)//aes128
+            rg_j_max <= fromInteger(valueOf(Nr_AES128));
+        else if(keytype==1)//aes192
+            rg_j_max <= fromInteger(valueOf(Nr_AES192));
+        else //aes 256
+            rg_j_max <= fromInteger(valueOf(Nr_AES256));
     endmethod
 
     // Indicator that key expansion is complete.

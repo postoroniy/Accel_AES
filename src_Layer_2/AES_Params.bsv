@@ -55,6 +55,12 @@ Integer nb = valueOf (Nb);
 typedef TAdd #(6, Nk)  Nr;    // 10, 12, 14
 Integer nr = valueOf (Nr);
 
+//number of rounds for encrypt/decrypt
+typedef TAdd #(6, AES128)  Nr_AES128;
+typedef TAdd #(6, AES192)  Nr_AES192;
+typedef TAdd #(6, AES256)  Nr_AES256;
+
+//indexes during of key expansion rounds
 typedef AES128                                   Nrmin_AES128;
 typedef TMul #(TAdd #( TAdd #(6, AES128),1),Nb)  Nrmax_AES128;
 
