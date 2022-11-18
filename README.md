@@ -1,6 +1,6 @@
 # Accel_AES
 
-Note: under construction (May 28, 2019)
+Note: under construction (Nov 18, 2022)
 
 This is a hardware IP, a hardware implementation of AES (Advanced Encryption Standard). The hardware is designed in the High-Level Hardware Design Language Bluespec BSV, but this repo also contains pre-generated Verilog that can be used immediately as-is.
 

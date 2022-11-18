@@ -78,8 +78,8 @@ module mkAES_Encrypt_Decrypt (AES_Encrypt_Decrypt_IFC);
     // Supply the key here.
     // This will kick off an internal process to expand the key into
     // the full key schedule.
-    method Action set_key (Bit #(AESKeySize) key);
-        keyExpand.set_key (key);
+    method Action set_key (Bit #(AESKeySize) key, Bit #(2) keytype);
+        keyExpand.set_key (key,keytype);
     endmethod
 
     // Indicator that key expansion is complete.

@@ -29,30 +29,31 @@ import AES_Defs    :: *;
 // INTERFACE
 
 interface AES_KeyExpand_IFC;
-   // Deposit the key here.
-   // This will kick off an internal process to expand the key into
-   // the full key schedule.
+    // Deposit the key here.
+    // This will kick off an internal process to expand the key into
+    // the full key schedule.
+    method Action set_key (Bit #(AESKeySize) key, Bit #(2) keytype);
+    // Indicator that key expansion is complete
+    // (apps may not need this; method keySchedule is not enabled while key expansion is in progress)
+    method Bool key_ready;
 
-   method Action set_key (Bit #(AESKeySize) key);
-
-   // Indicator that key expansion is complete
-   // (apps may not need this; method keySchedule is not enabled while key expansion is in progress)
-   method Bool key_ready;
-
-   // The key schedule
-   method KeySchedule keySchedule;
+    // The key schedule
+    method KeySchedule keySchedule;
 endinterface
 
 // ================================================================
 // MODULE
-
+(* synthesize *)
 module mkAES_KeyExpand (AES_KeyExpand_IFC);
 
-   // keyWS state
+    // keyWS state
    Vector #(TMul #(TAdd #(Nr, 1), Nb),
 	    Reg #(Vector #(4, Bit #(8))))  keyWS_state <- replicateM (mkRegU);
 
-   Reg #(Bit #(6)) rg_i <- mkRegU;
+    PulseWire rg_start <- mkPulseWire();
+    Reg #(Bit #(6)) rg_i <- mkRegU;
+    Reg #(Bit #(6)) rg_i_min <- mkRegU;
+    Reg #(Bit #(6)) rg_i_max <- mkRegU;
 
    // ----------------------------------------------------------------
 
@@ -63,45 +64,60 @@ module mkAES_KeyExpand (AES_KeyExpand_IFC);
       return keySched;
    endfunction
 
-   // ----------------------------------------------------------------
-   // BEHAVIOR
-   FSM fsm_expandKey <- mkFSM (
-      seq
-	 // keyWS ()
-         for (rg_i <= fromInteger (nk); rg_i < fromInteger ((nr+1) * nb) ; rg_i <= rg_i + 1) action
-	         let prev = keyWS_state [rg_i-1];
-            let old = keyWS_state [rg_i-fromInteger (nk)];
-	         keyWS_state [rg_i] <= nextWord (rg_i, prev, old);
-         endaction
-      endseq
-   );
+    // ----------------------------------------------------------------
+    // BEHAVIOR
+    FSM fsm_expandKey <- mkFSM (
+    seq
+        // keyWS ()
+        for (rg_i <= rg_i_min; rg_i < rg_i_max ; rg_i <= rg_i + 1)
+            keyWS_state [rg_i] <= nextWord (rg_i, keyWS_state [rg_i-1], keyWS_state [rg_i-fromInteger (nk)]);
+    endseq
+    );
 
-   // ----------------------------------------------------------------
-   // INTERFACE
+    rule starting_fsm (rg_start);
+        fsm_expandKey.start;
+    endrule
 
-   // Deposit the key here.
-   // This will kick off an internal process to expand the key into
-   // the full key schedule.
+    // ----------------------------------------------------------------
+    // INTERFACE
 
-   method Action set_key (Bit #(AESKeySize) key) if (fsm_expandKey.done);
-      // Initialize key expansion (cf. first part of expandKey())
-      Vector #(Nk, Vector #(4, Bit #(8))) seed = map (reverse, reverse (unpack (key)));
-      for (Integer i = 0; i < nk; i = i + 1)
-         keyWS_state [i] <= seed [i];
-      // Start the key-expansion fsm
-      fsm_expandKey.start;
-   endmethod
+    // Deposit the key here.
+    // This will kick off an internal process to expand the key into
+    // the full key schedule.
+    method Action set_key (Bit #(AESKeySize) key, Bit #(2) keytype)  if (fsm_expandKey.done);
+        // Initialize key expansion (cf. first part of expandKey())
+        Vector #(Nk, Vector #(4, Bit #(8))) seed = map (reverse, reverse (unpack (key)));
+        for (Integer i = 0; i < nk; i = i + 1)
+            keyWS_state [i] <= seed [i];
 
-   // Indicator that key expansion is complete
-   // (apps may not need this; method keySchedule is not enabled while key expansion is in progress)
-   method Bool key_ready;
-      return fsm_expandKey.done;
-   endmethod
+        if(keytype==0) begin
+            //aes128
+            rg_i_min <= fromInteger(valueOf(Nrmin_AES128));
+            rg_i_max <= fromInteger(valueOf(Nrmax_AES128));
+        end else if(keytype==1) begin
+            //aes192
+            rg_i_min <= fromInteger(valueOf(Nrmin_AES192));
+            rg_i_max <= fromInteger(valueOf(Nrmax_AES192));
+        end else begin
+            //aes 256
+            rg_i_min <= fromInteger(valueOf(Nrmin_AES256));
+            rg_i_max <= fromInteger(valueOf(Nrmax_AES256));
+        end
+        // Start the key-expansion fsm
+        // fsm_expandKey.start;
+        rg_start.send();
+    endmethod
 
-   // The key schedule
-   method KeySchedule keySchedule;
-      return fn_keySchedule;
-   endmethod
+    // Indicator that key expansion is complete
+    // (apps may not need this; method keySchedule is not enabled while key expansion is in progress)
+    method Bool key_ready;
+        return fsm_expandKey.done;
+    endmethod
+
+    // The key schedule
+    method KeySchedule keySchedule;
+        return fn_keySchedule;
+    endmethod
 endmodule
 // ================================================================
 endpackage

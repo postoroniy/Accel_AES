@@ -34,17 +34,15 @@ package AES_Params;
 // CR 15 type AES128 = 4
 // CR 16 type AES192 = 6
 // CR 17 type AES256 = 8
-
 typedef  4  AES128;
 typedef  6  AES192;
 typedef  8  AES256;
 
 // CR 18
 // CR 19 type Nk = AES128
-
-typedef  AES128  Nk;
+// typedef  AES128  Nk;
 // typedef  AES192  Nk;
-// typedef  AES256  Nk;
+typedef AES256  Nk;
 Integer nk = valueOf (Nk);
 
 // CR 24
@@ -56,6 +54,16 @@ typedef 4  Nb;
 Integer nb = valueOf (Nb);
 typedef TAdd #(6, Nk)  Nr;    // 10, 12, 14
 Integer nr = valueOf (Nr);
+
+typedef AES128                                   Nrmin_AES128;
+typedef TMul #(TAdd #( TAdd #(6, AES128),1),Nb)  Nrmax_AES128;
+
+typedef AES192                                   Nrmin_AES192;
+typedef TMul #(TAdd #( TAdd #(6, AES192),1),Nb)  Nrmax_AES192;
+
+typedef AES256                                   Nrmin_AES256;
+typedef TMul #(TAdd #( TAdd #(6, AES256),1),Nb)  Nrmax_AES256;
+
 
 // CR 28
 // CR 29 type AESKeySize = (Nk*32)

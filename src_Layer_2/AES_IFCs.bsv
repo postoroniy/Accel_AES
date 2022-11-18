@@ -42,59 +42,59 @@ import AES_Params :: *;
 // Encryption box interface
 
 interface AES_Encrypt_IFC;
-   // Supply the key here.
-   // This will kick off an internal process to expand the key into
-   // the full key schedule.
-   method Action set_key (Bit #(AESKeySize) key);
+    // Supply the key here.
+    // This will kick off an internal process to expand the key into
+    // the full key schedule.
+    method Action set_key (Bit #(AESKeySize) key,Bit #(2) keytype);
 
-   // Indicator that key expansion is complete.
-   // This is provided as a convenience, if needed (the 'request'
-   // sub-interface in the Server below will not accept inputs until
-   // key-expansion is complete).
-   method Bool key_ready;
+    // Indicator that key expansion is complete.
+    // This is provided as a convenience, if needed (the 'request'
+    // sub-interface in the Server below will not accept inputs until
+    // key-expansion is complete).
+    method Bool key_ready;
 
-   // put plaintext and get ciphertext here
-   interface Server #(Bit #(128), Bit #(128)) encrypt;
+    // put plaintext and get ciphertext here
+    interface Server #(Bit #(128), Bit #(128)) encrypt;
 endinterface
 
 // ================================================================
 // Decryption box interface
 
 interface AES_Decrypt_IFC;
-   // Supply the key here.
-   // This will kick off an internal process to expand the key into
-   // the full key schedule.
-   method Action set_key (Bit #(AESKeySize) key);
+    // Supply the key here.
+    // This will kick off an internal process to expand the key into
+    // the full key schedule.
+    method Action set_key (Bit #(AESKeySize) key,Bit #(2) keytype);
 
-   // Indicator that key expansion is complete.
-   // This is provided as a convenience, if needed (the 'request'
-   // sub-interface in the Server below will not accept inputs until
-   // key-expansion is complete).
-   method Bool key_ready;
+    // Indicator that key expansion is complete.
+    // This is provided as a convenience, if needed (the 'request'
+    // sub-interface in the Server below will not accept inputs until
+    // key-expansion is complete).
+    method Bool key_ready;
 
-   // put ciphertext and get plaintext here
-   interface Server #(Bit #(128), Bit #(128)) decrypt;
+    // put ciphertext and get plaintext here
+    interface Server #(Bit #(128), Bit #(128)) decrypt;
 endinterface
 
 // ================================================================
 // Encryption-and-decryption box interface
 
 interface AES_Encrypt_Decrypt_IFC;
-   // Supply the key here.
-   // This will kick off an internal process to expand the key into
-   // the full key schedule.
-   method Action set_key (Bit #(AESKeySize) key);
+    // Supply the key here.
+    // This will kick off an internal process to expand the key into
+    // the full key schedule.
+    method Action set_key (Bit #(AESKeySize) key,Bit #(2) keytype);
 
-   // Indicator that key expansion is complete.
-   // This is provided as a convenience, if needed (the 'request'
-   // sub-interface in the Server below will not accept inputs until
-   // key-expansion is complete).
-   method Bool key_ready;
+    // Indicator that key expansion is complete.
+    // This is provided as a convenience, if needed (the 'request'
+    // sub-interface in the Server below will not accept inputs until
+    // key-expansion is complete).
+    method Bool key_ready;
 
-   // Encryption: put plaintext and get ciphertext here
-   interface Server #(Bit #(128), Bit #(128)) encrypt;
+    // Encryption: put plaintext and get ciphertext here
+    interface Server #(Bit #(128), Bit #(128)) encrypt;
 
-   // Decryption: put ciphertext and get plaintext here
-   interface Server #(Bit #(128), Bit #(128)) decrypt;
+    // Decryption: put ciphertext and get plaintext here
+    interface Server #(Bit #(128), Bit #(128)) decrypt;
 endinterface
 endpackage
