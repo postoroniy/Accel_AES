@@ -1,0 +1,5 @@
+read_verilog Verilog_RTL/*.v
+read_verilog /home/slava/projects/bluespec/bsc/inst/lib/Verilog/FIFO2.v
+read_verilog /home/slava/projects/bluespec/bsc/inst/lib/Verilog/FIFO20.v
+synth_xilinx -top mkAccel_AES -family xcup -flatten
+write_verilog -noattr xil/mkAccel_AES_xil.v
