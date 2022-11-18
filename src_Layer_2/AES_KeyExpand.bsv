@@ -65,17 +65,16 @@ module mkAES_KeyExpand (AES_KeyExpand_IFC);
 
    // ----------------------------------------------------------------
    // BEHAVIOR
-
    FSM fsm_expandKey <- mkFSM (
       seq
 	 // keyWS ()
          for (rg_i <= fromInteger (nk); rg_i < fromInteger ((nr+1) * nb) ; rg_i <= rg_i + 1) action
-	    let prev = keyWS_state [rg_i-1];
-	    let old = keyWS_state [rg_i-fromInteger (nk)];
-	    keyWS_state [rg_i] <= nextWord (rg_i, prev, old);
-	 endaction
+	         let prev = keyWS_state [rg_i-1];
+            let old = keyWS_state [rg_i-fromInteger (nk)];
+	         keyWS_state [rg_i] <= nextWord (rg_i, prev, old);
+         endaction
       endseq
-      );
+   );
 
    // ----------------------------------------------------------------
    // INTERFACE
@@ -88,8 +87,7 @@ module mkAES_KeyExpand (AES_KeyExpand_IFC);
       // Initialize key expansion (cf. first part of expandKey())
       Vector #(Nk, Vector #(4, Bit #(8))) seed = map (reverse, reverse (unpack (key)));
       for (Integer i = 0; i < nk; i = i + 1)
-	 keyWS_state [i] <= seed [i];
-
+         keyWS_state [i] <= seed [i];
       // Start the key-expansion fsm
       fsm_expandKey.start;
    endmethod
@@ -104,9 +102,6 @@ module mkAES_KeyExpand (AES_KeyExpand_IFC);
    method KeySchedule keySchedule;
       return fn_keySchedule;
    endmethod
-
 endmodule
-
 // ================================================================
-
 endpackage

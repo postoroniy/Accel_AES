@@ -15,37 +15,31 @@ package AXI4_Accel_IFC;
 // ================================================================
 // Bluespec library imports
 
-import RegFile      :: *;
-import FIFOF        :: *;
-import GetPut       :: *;
-import ClientServer :: *;
+   import RegFile      :: *;
+   import FIFOF        :: *;
+   import GetPut       :: *;
+   import ClientServer :: *;
 
-// ----------------
-// BSV additional libs
+   // ----------------
+   // BSV additional libs
 
-import Cur_Cycle  :: *;
-import GetPut_Aux :: *;
-import Semi_FIFOF :: *;
+   import Cur_Cycle  :: *;
+   import GetPut_Aux :: *;
+   import Semi_FIFOF :: *;
 
-// ================================================================
-// Project imports
+   // ================================================================
+   // Project imports
 
-import AXI4_Types  :: *;
-import Fabric_Defs :: *;
+   import AXI4_Types  :: *;
+   import Fabric_Defs :: *;
 
-// ================================================================
-// Interface
-
-interface AXI4_Accel_IFC;
-   method Action init (Bit# (Wd_Id) axi4_id, Bit #(Wd_Addr) addr_base, Bit #(Wd_Addr) addr_lim);
-
-   interface AXI4_Slave_IFC  #(Wd_Id, Wd_Addr, Wd_Data, Wd_User)  slave;
-
-   method Bool interrupt_req;
-
-   interface AXI4_Master_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User)  master;
-endinterface
-
-// ================================================================
+   // ================================================================
+   // Interface
+   interface AXI4_Accel_IFC;
+      method Action init (Bit# (Wd_Id) axi4_id, Bit #(Wd_Addr) addr_base, Bit #(Wd_Addr) addr_lim);
+      interface AXI4_Slave_IFC  #(Wd_Id, Wd_Addr, Wd_Data, Wd_User)  slave;
+      method Bool interrupt_req;
+      interface AXI4_Master_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User)  master;
+   endinterface
 
 endpackage

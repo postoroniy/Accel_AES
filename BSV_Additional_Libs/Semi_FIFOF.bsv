@@ -9,184 +9,183 @@ package Semi_FIFOF;
 // ================================================================
 // BSV library imports
 
-import FIFOF       :: *;
-import Connectable :: *;
-import GetPut      :: *;
-import FIFOLevel   :: *;
+    import FIFOF       :: *;
+    import Connectable :: *;
+    import GetPut      :: *;
+    import FIFOLevel   :: *;
 
-// ================================================================
-// Semi-FIFOF interfaces
+    // ================================================================
+    // Semi-FIFOF interfaces
 
-interface FIFOF_I #(type t);
-   method Action  enq (t x);
-   method Bool    notFull ();
-endinterface
+    interface FIFOF_I #(type t);
+        method Action  enq (t x);
+        method Bool    notFull ();
+    endinterface
 
-interface FIFOF_O #(type t);
-   method t       first ();
-   method Action  deq ();
-   method Bool    notEmpty ();
-endinterface
+    interface FIFOF_O #(type t);
+        method t       first ();
+        method Action  deq ();
+        method Bool    notEmpty ();
+    endinterface
 
-// ================================================================
-// Converters to and from Semi-FIFOF interfaces
+    // ================================================================
+    // Converters to and from Semi-FIFOF interfaces
 
-typeclass To_FIFOF_IO#(type tf, type t)
-   dependencies (tf determines t);
+    typeclass To_FIFOF_IO#(type tf, type t) dependencies (tf determines t);
+        function FIFOF_I #(t) to_FIFOF_I (tf f);
+        function FIFOF_O #(t) to_FIFOF_O (tf f);
+    endtypeclass
 
-   function FIFOF_I #(t) to_FIFOF_I (tf f);
-   function FIFOF_O #(t) to_FIFOF_O (tf f);
-endtypeclass
+    instance To_FIFOF_IO#(FIFOF#(t), t);
+        function FIFOF_I #(t) to_FIFOF_I (FIFOF #(t) f);
+            return
+                interface FIFOF_I;
+                    method enq (x) = f.enq (x);
+                    method notFull = f.notFull;
+                endinterface;
+        endfunction
 
-instance To_FIFOF_IO#(FIFOF#(t), t);
-   function FIFOF_I #(t) to_FIFOF_I (FIFOF #(t) f);
-      return interface FIFOF_I;
-		method enq (x) = f.enq (x);
-		method notFull = f.notFull;
-	     endinterface;
-   endfunction
+        function FIFOF_O #(t) to_FIFOF_O (FIFOF #(t) f);
+            return
+                interface FIFOF_O;
+                    method first    = f.first;
+                    method deq      = f.deq;
+                    method notEmpty = f.notEmpty;
+                endinterface;
+        endfunction
+    endinstance
 
-   function FIFOF_O #(t) to_FIFOF_O (FIFOF #(t) f);
-      return interface FIFOF_O;
-		method first    = f.first;
-		method deq      = f.deq;
-		method notEmpty = f.notEmpty;
-	     endinterface;
-   endfunction
-endinstance
+    instance To_FIFOF_IO#(FIFOLevelIfc#(t,n), t);
+        function FIFOF_I #(t) to_FIFOF_I (FIFOLevelIfc #(t,n) f);
+            return
+                interface FIFOF_I;
+                    method enq (x) = f.enq (x);
+                    method notFull = f.notFull;
+                endinterface;
+        endfunction
 
-instance To_FIFOF_IO#(FIFOLevelIfc#(t,n), t);
-   function FIFOF_I #(t) to_FIFOF_I (FIFOLevelIfc #(t,n) f);
-      return interface FIFOF_I;
-		method enq (x) = f.enq (x);
-		method notFull = f.notFull;
-	     endinterface;
-   endfunction
+        function FIFOF_O #(t) to_FIFOF_O (FIFOLevelIfc #(t,n) f);
+            return
+                interface FIFOF_O;
+                    method first    = f.first;
+                    method deq      = f.deq;
+                    method notEmpty = f.notEmpty;
+                endinterface;
+        endfunction
+    endinstance
 
-   function FIFOF_O #(t) to_FIFOF_O (FIFOLevelIfc #(t,n) f);
-      return interface FIFOF_O;
-		method first    = f.first;
-		method deq      = f.deq;
-		method notEmpty = f.notEmpty;
-	     endinterface;
-   endfunction
-endinstance
+    // -----------------------------------------------------------
+    // Converters to Get/Put interfaces
 
-// -----------------------------------------------------------
-// Converters to Get/Put interfaces
+    instance ToGet#(FIFOF_O#(t), t);
+        function toGet(ff) = (
+            interface Get;
+                method get();
+                    actionvalue
+                        ff.deq;
+                        return ff.first;
+                    endactionvalue
+                endmethod
+            endinterface
+        );
+    endinstance
 
-instance ToGet#(FIFOF_O#(t), t);
-   function toGet(ff) = (
-      interface Get;
-	 method get();
-	    actionvalue
-	       ff.deq;
-	       return ff.first;
-	    endactionvalue
-	 endmethod
-      endinterface
-			 );
-endinstance
+    instance ToPut#(FIFOF_I#(t), t);
+        function toPut(ff) = (
+            interface Put;
+                method Action put(x);
+                    ff.enq(x);
+                endmethod
+            endinterface
+        );
+    endinstance
 
-instance ToPut#(FIFOF_I#(t), t);
-   function toPut(ff) = (
-      interface Put;
-	 method Action put(x);
-	    ff.enq(x);
-	 endmethod
-      endinterface
-			 );
-endinstance
+    // ================================================================
+    // Connections
 
-// ================================================================
-// Connections
+    // ----------------
+    // FIFOF_O to FIFOF_I
 
-// ----------------
-// FIFOF_O to FIFOF_I
+    instance Connectable #(FIFOF_O #(t), FIFOF_I #(t));
+        module mkConnection #(FIFOF_O #(t) fo, FIFOF_I #(t) fi) (Empty);
+            rule rl_connect;
+                fi.enq (fo.first);
+                fo.deq;
+            endrule
+        endmodule
+    endinstance
 
-instance Connectable #(FIFOF_O #(t), FIFOF_I #(t));
-   module mkConnection #(FIFOF_O #(t) fo, FIFOF_I #(t) fi) (Empty);
-      rule rl_connect;
-	 fi.enq (fo.first);
-	 fo.deq;
-      endrule
-   endmodule
-endinstance
+    // ----------------
+    // FIFOF_I to FIFOF_O
 
-// ----------------
-// FIFOF_I to FIFOF_O
+    instance Connectable #(FIFOF_I #(t), FIFOF_O #(t));
+        module mkConnection #(FIFOF_I #(t) fi, FIFOF_O #(t) fo) (Empty);
+            mkConnection (fo, fi);
+        endmodule
+    endinstance
 
-instance Connectable #(FIFOF_I #(t), FIFOF_O #(t));
-   module mkConnection #(FIFOF_I #(t) fi, FIFOF_O #(t) fo) (Empty);
-      mkConnection (fo, fi);
-   endmodule
-endinstance
+    // ----------------
+    // FIFOF_O to FIFOF
 
-// ----------------
-// FIFOF_O to FIFOF
+    instance Connectable #(FIFOF_O #(t), FIFOF #(t));
+        module mkConnection #(FIFOF_O #(t) fo, FIFOF #(t) fi) (Empty);
+            rule rl_connect;
+                fi.enq (fo.first);
+                fo.deq;
+            endrule
+        endmodule
+    endinstance
 
-instance Connectable #(FIFOF_O #(t), FIFOF #(t));
-   module mkConnection #(FIFOF_O #(t) fo, FIFOF #(t) fi) (Empty);
-      rule rl_connect;
-	 fi.enq (fo.first);
-	 fo.deq;
-      endrule
-   endmodule
-endinstance
+    // ----------------
+    // FIFOF to FIFOF_I
 
-// ----------------
-// FIFOF to FIFOF_I
+    instance Connectable #(FIFOF #(t), FIFOF_I #(t));
+        module mkConnection #(FIFOF #(t) fo, FIFOF_I #(t) fi) (Empty);
+            rule rl_connect;
+                fi.enq (fo.first);
+                fo.deq;
+            endrule
+        endmodule
+    endinstance
 
-instance Connectable #(FIFOF #(t), FIFOF_I #(t));
-   module mkConnection #(FIFOF #(t) fo, FIFOF_I #(t) fi) (Empty);
-      rule rl_connect;
-	 fi.enq (fo.first);
-	 fo.deq;
-      endrule
-   endmodule
-endinstance
+    // ================================================================
+    // Convenience function combining first/enq
 
-// ================================================================
-// Convenience function combining first/enq
+    function ActionValue #(t) pop_o (FIFOF_O #(t) f);
+        actionvalue
+            f.deq;
+            return f.first;
+        endactionvalue
+    endfunction
 
-function ActionValue #(t) pop_o (FIFOF_O #(t) f);
-   actionvalue
-      f.deq;
-      return f.first;
-   endactionvalue
-endfunction
+    // ================================================================
+    // Dummy tie-off interfaces
 
-// ================================================================
-// Dummy tie-off interfaces
+    // dummy_FIFO_I that never accepts anything (always "full")
 
-// dummy_FIFO_I that never accepts anything (always "full")
+    FIFOF_I #(t) dummy_FIFOF_I = interface FIFOF_I;
+        method Action enq (x) if (False);
+            noAction;
+        endmethod
+        method notFull;
+            return False;
+        endmethod
+    endinterface;
 
-FIFOF_I #(t) dummy_FIFOF_I = interface FIFOF_I;
-				method Action enq (x) if (False);
-				   noAction;
-				endmethod
-				method notFull;
-				   return False;
-				endmethod
-			     endinterface;
+    // Dummy FIFO_O that never yields anything (always "empty")
 
-// Dummy FIFO_O that never yields anything (always "empty")
+    FIFOF_O #(t) dummy_FIFOF_O = interface FIFOF_O;
+        method first () if (False);
+            return ?;
+        endmethod
 
-FIFOF_O #(t) dummy_FIFOF_O = interface FIFOF_O;
-				method first () if (False);
-				   return ?;
-				endmethod
+        method Action deq () if (False);
+            noAction;
+        endmethod
 
-				method Action deq () if (False);
-				   noAction;
-				endmethod
-
-				method notEmpty;
-				   return False;
-				endmethod
-			     endinterface;
-
-
-// ================================================================
+        method notEmpty;
+            return False;
+        endmethod
+    endinterface;
 
 endpackage

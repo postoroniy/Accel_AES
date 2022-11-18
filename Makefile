@@ -1,19 +1,19 @@
 ###  -*-Makefile-*-
-
 # Copyright (c) 2019 Bluespec, Inc. All Rights Reserved
-
 # ================================================================
 
-.PHONY: help
-help:
-	@echo '    make  compile      Recompile the IP to Verilog (in dir Verilog_RTL)'
-	@echo '                           NOTE: needs Bluespec bsc compiler'
-	@echo ''
-	@echo '    make  clean        Remove intermediate build-files'
-	@echo '    make  full_clean   Restore to pristine state (pre-building anything)'
+RTL_GEN_DIR = Verilog_RTL 
+BUILD_DIR = build
+INFO_DIR = info
+XILINX_DIR = xil
 
-.PHONY: all
-all: compile
+help:
+	@echo "make  compile    Compile the IP to Verilog (in $(RTL_GEN_DIR))"
+	@echo "make  syn		Same as compile and also runs synthesys by yosys for Xilinx's Ultrascale Plus FPGA"
+	@echo "make  all		same as syn"
+	@echo "make  clean 		Restore to pristine state (pre-building anything)"
+
+all: syn
 
 # ================================================================
 # Search path for bsc for .bsv files
@@ -23,7 +23,7 @@ BSC_PATH = src_Layer_2:src_Layer_1:src_Layer_0:BSV_Additional_Libs:+
 # ----------------
 # Top-level file and module
 
-TOPFILE   ?= src_Layer_0/AXI4_Accel.bsv
+TOPFILE ?= src_Layer_0/AXI4_Accel.bsv
 
 # ================================================================
 # bsc compilation flags
@@ -31,33 +31,20 @@ TOPFILE   ?= src_Layer_0/AXI4_Accel.bsv
 BSC_COMPILATION_FLAGS += \
 	-keep-fires -aggressive-conditions -no-warn-action-shadowing -no-show-timestamps -check-assert \
 	-suppress-warnings G0020    \
-	+RTS -K128M -RTS  -show-range-conflict
+	+RTS -K128M -RTS  -show-range-conflict -remove-dollar
 
-# ================================================================
-# Generate Verilog RTL from BSV sources (needs Bluespec 'bsc' compiler)
 
-RTL_GEN_DIRS = -vdir Verilog_RTL  -bdir build_dir  -info-dir build_dir
+RTL_GEN_DIRS = -vdir $(RTL_GEN_DIR) -bdir $(BUILD_DIR) -info-dir $(INFO_DIR)
+ALL_DIRS = $(RTL_GEN_DIR) $(BUILD_DIR) $(INFO_DIR) $(XILINX_DIR)
 
-build_dir:
+$(ALL_DIRS): 
 	mkdir -p $@
 
-Verilog_RTL:
-	mkdir -p $@
+compile:  $(ALL_DIRS)
+	bsc -u -elab -verilog $(RTL_GEN_DIRS) -D FABRIC64 $(BSC_COMPILATION_FLAGS) -p $(BSC_PATH) $(TOPFILE)
 
-.PHONY: compile
-compile:  build_dir  Verilog_RTL
-	@echo  "INFO: Verilog RTL generation ..."
-	bsc -u -elab -verilog  $(RTL_GEN_DIRS)  -D FABRIC64 $(BSC_COMPILATION_FLAGS)  -p $(BSC_PATH)  $(TOPFILE)
-	@echo  "INFO: Verilog RTL generation finished"
+syn: compile
+	yosys -s ys
 
-# ================================================================
-
-.PHONY: clean
 clean:
-	rm -r -f  *~  */src_Layer*/*~  build_dir  obj_dir
-
-.PHONY: full_clean
-full_clean: clean
-	rm  -r -f  build_dir  Verilog_RTL
-
-# ================================================================
+	rm -rf $(ALL_DIRS)

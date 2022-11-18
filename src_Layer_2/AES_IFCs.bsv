@@ -97,7 +97,4 @@ interface AES_Encrypt_Decrypt_IFC;
    // Decryption: put ciphertext and get plaintext here
    interface Server #(Bit #(128), Bit #(128)) decrypt;
 endinterface
-
-// ================================================================
-
 endpackage

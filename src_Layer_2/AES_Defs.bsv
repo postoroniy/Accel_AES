@@ -67,15 +67,10 @@ typedef Vector #(4, Vector #(4, Func_GF28_to_GF28)) FuncMat;
 
 function State gf28MatrixMult (FuncMat m, State n);
    State x = replicate (replicate (0));
-
-   for( Integer i = 0; i < 4; i = i+1) begin
-      for( Integer j = 0; j < 4; j = j+1) begin
-	 for( Integer k = 0; k < 4; k = k+1 ) begin
+   for( Integer i = 0; i < 4; i = i+1)
+      for( Integer j = 0; j < 4; j = j+1)
+	      for( Integer k = 0; k < 4; k = k+1 )
             x[i][j] = x[i][j] ^ m[i][k] (n[k][j]);
-	 end
-      end
-   end
-
    return x;
 endfunction
 
@@ -223,13 +218,10 @@ function State addRoundKey (RoundKey rk, State s) = zipWith (zipWith (\^  ), rk,
 // rcon_table 'memoizes' the function for args 0..10
 // (These values are generated in Cryptol or in BSV AES_Spec)
 
-Vector #(11, GF28) rcon_table
-   = begin
-	GF28 arr [11] = {   ?, 'h01, 'h02, 'h04,
-			 'h08, 'h10, 'h20, 'h40,
-			 'h80, 'h1b, 'h36 };
+Vector #(11, GF28) rcon_table = begin
+   GF28 arr [11] = {   ?, 'h01, 'h02, 'h04, 'h08, 'h10, 'h20, 'h40, 'h80, 'h1b, 'h36 };
 	arrayToVector (arr);
-     end;
+end;
 
 function Vector #(4, GF28) rcon_prime (Bit #(4) i);
    GF28 xs [4] = {rcon_table [i], 0, 0, 0};
