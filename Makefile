@@ -30,9 +30,7 @@ TOPFILE ?= src_Layer_0/AXI4_Accel.bsv
 
 BSC_COMPILATION_FLAGS += \
 	-keep-fires -aggressive-conditions -no-warn-action-shadowing -no-show-timestamps -check-assert \
-	-suppress-warnings G0020    \
 	+RTS -K128M -RTS  -show-range-conflict -remove-dollar
-
 
 RTL_GEN_DIRS = -vdir $(RTL_GEN_DIR) -bdir $(BUILD_DIR) -info-dir $(INFO_DIR)
 ALL_DIRS = $(RTL_GEN_DIR) $(BUILD_DIR) $(INFO_DIR) $(XILINX_DIR)
