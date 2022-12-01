@@ -52,6 +52,7 @@ module mkAES_KeyExpand (AES_KeyExpand_IFC);
 
     PulseWire rg_start <- mkPulseWire();
     Reg #(Bit #(6)) rg_i <- mkRegU;
+    Reg #(Bit #(6)) rg_nk <- mkRegU;
     Reg #(Bit #(6)) rg_i_min <- mkRegU;
     Reg #(Bit #(6)) rg_i_max <- mkRegU;
 
@@ -70,7 +71,7 @@ module mkAES_KeyExpand (AES_KeyExpand_IFC);
     seq
         // keyWS ()
         for (rg_i <= rg_i_min; rg_i < rg_i_max ; rg_i <= rg_i + 1)
-            keyWS_state [rg_i] <= nextWord (rg_i, keyWS_state [rg_i-1], keyWS_state [rg_i-fromInteger (nk)]);
+            keyWS_state [rg_i] <= nextWord (rg_i, keyWS_state [rg_i-1], keyWS_state [rg_i-rg_nk]);
     endseq
     );
 
@@ -94,14 +95,17 @@ module mkAES_KeyExpand (AES_KeyExpand_IFC);
             //aes128
             rg_i_min <= fromInteger(valueOf(Nrmin_AES128));
             rg_i_max <= fromInteger(valueOf(Nrmax_AES128));
+            rg_nk <= fromInteger(valueOf(AES128));
         end else if(keytype==1) begin
             //aes192
             rg_i_min <= fromInteger(valueOf(Nrmin_AES192));
             rg_i_max <= fromInteger(valueOf(Nrmax_AES192));
+            rg_nk <= fromInteger(valueOf(AES192));
         end else begin
             //aes 256
             rg_i_min <= fromInteger(valueOf(Nrmin_AES256));
             rg_i_max <= fromInteger(valueOf(Nrmax_AES256));
+            rg_nk <= fromInteger(valueOf(AES256));
         end
         // Start the key-expansion fsm
         // fsm_expandKey.start;
